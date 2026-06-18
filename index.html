@@ -1504,188 +1504,185 @@ p {
     </footer>
   </div>
 
-  <script>
+<script>
+const EVENT_LOADING_MIN_TIME = 700;
+const STAMP_VIEW_TIME = 900;
+const eventLoadingStart = Date.now();
 
-    const EVENT_LOADING_MIN_TIME = 700;
-    const STAMP_VIEW_TIME = 900;
-    const eventLoadingStart = Date.now();
+function hideEventLoader() {
+  const loader = document.getElementById("event-loading-screen");
+  if (loader) loader.classList.add("is-hidden");
+  document.body.classList.add("is-page-started");
+}
 
-    window.addEventListener("load", () => {
-      const loader = document.getElementById("event-loading-screen");
-      if (!loader) return;
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    const loader = document.getElementById("event-loading-screen");
+    if (loader) loader.classList.add("is-stamped");
 
-      const elapsed = Date.now() - eventLoadingStart;
-      const wait = Math.max(0, EVENT_LOADING_MIN_TIME - elapsed);
+    setTimeout(hideEventLoader, STAMP_VIEW_TIME);
+  }, EVENT_LOADING_MIN_TIME);
+});
 
-      setTimeout(() => {
-        loader.classList.add("is-stamped");
+/* 念のため、画像読み込み失敗しても必ず進む */
+setTimeout(hideEventLoader, 2400);
 
-        setTimeout(() => {
-          loader.classList.add("is-hidden");
-          document.body.classList.add("is-page-started");
-        }, STAMP_VIEW_TIME);
-      }, wait);
-    });
+const CONFIG = {
+  images: ["image1.png", "image2.png", "image3.png", "image4.png"],
+  initialDelay: 500,
+  spawnInterval: 2600,
+  fallSpeed: 0.9,
+  maxStickers: 5,
+  swayRange: 0.55,
+  minSize: 130,
+  maxSize: 200
+};
 
-    const CONFIG = {
-      images: ['image1.png', 'image2.png', 'image3.png', 'image4.png'],
-      initialDelay: 500,
-      spawnInterval: 2600,
-      fallSpeed: 0.9,
-      maxStickers: 5,
-      swayRange: 0.55,
-      minSize: 130,
-      maxSize: 200
+const container = document.getElementById("sticker-layer");
+let stickers = [];
+let lastImgIndex = -1;
+
+function random(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function pickImageIndex() {
+  if (CONFIG.images.length <= 1) return 0;
+
+  let imgIdx;
+  do {
+    imgIdx = Math.floor(Math.random() * CONFIG.images.length);
+  } while (imgIdx === lastImgIndex);
+
+  lastImgIndex = imgIdx;
+  return imgIdx;
+}
+
+class Sticker {
+  constructor() {
+    this.el = null;
+    this.dead = false;
+    this.x = 0;
+    this.y = 0;
+    this.angle = 0;
+    this.opacity = 1;
+    this.swayOffset = Math.random() * 100;
+    this.swayBase = random(-0.18, 0.18);
+    this.rotateSpeed = random(-0.35, 0.35);
+    this.fallSpeed = CONFIG.fallSpeed * random(0.75, 2.2);
+    this.init();
+  }
+
+  init() {
+    if (!container) return;
+
+    const imgIdx = pickImageIndex();
+    const size = random(CONFIG.minSize, CONFIG.maxSize);
+    const margin = size / 2 + 16;
+
+    this.x = random(margin, window.innerWidth - margin);
+    this.y = random(-280, -80);
+    this.angle = random(-180, 180);
+
+    const img = new Image();
+    img.src = CONFIG.images[imgIdx];
+    img.className = "sticker";
+    img.style.width = `${size}px`;
+
+    img.style.transform = `
+      translate3d(${this.x}px, ${this.y}px, 0)
+      translate(-50%, -50%)
+      rotate(${this.angle}deg)
+    `;
+
+    img.onload = () => {
+      container.appendChild(img);
+      this.el = img;
+      requestAnimationFrame(() => {
+        if (this.el) this.el.classList.add("is-visible");
+      });
     };
 
-    const container = document.getElementById('sticker-layer');
-    let stickers = [];
-    let lastImgIndex = -1;
+    img.onerror = () => {
+      this.dead = true;
+    };
+  }
 
-    function random(min, max) {
-      return Math.random() * (max - min) + min;
+  update(time) {
+    if (!this.el || this.dead) return;
+
+    this.y += this.fallSpeed;
+
+    const sway =
+      Math.sin(time * 0.002 + this.swayOffset) *
+      CONFIG.swayRange;
+
+    this.x += sway * 0.5 + this.swayBase;
+    this.angle += this.rotateSpeed;
+
+    if (this.y > window.innerHeight + 80) {
+      this.opacity -= 0.035;
+      if (this.opacity <= 0) this.dead = true;
     }
 
-    function pickImageIndex() {
-      if (CONFIG.images.length <= 1) return 0;
+    this.el.style.transform = `
+      translate3d(${this.x}px, ${this.y}px, 0)
+      translate(-50%, -50%)
+      rotate(${this.angle}deg)
+    `;
 
-      let imgIdx;
-      do {
-        imgIdx = Math.floor(Math.random() * CONFIG.images.length);
-      } while (imgIdx === lastImgIndex);
+    this.el.style.opacity = this.opacity;
+  }
+}
 
-      lastImgIndex = imgIdx;
-      return imgIdx;
+function spawnSticker() {
+  if (stickers.length >= CONFIG.maxStickers) return;
+  stickers.push(new Sticker());
+}
+
+function tick(time) {
+  for (let i = stickers.length - 1; i >= 0; i--) {
+    const sticker = stickers[i];
+    sticker.update(time);
+
+    if (sticker.dead) {
+      if (sticker.el) sticker.el.remove();
+      stickers.splice(i, 1);
     }
+  }
 
-    class Sticker {
-      constructor() {
-        this.el = null;
-        this.dead = false;
-        this.x = 0;
-        this.y = 0;
-        this.angle = 0;
-        this.opacity = 1;
-        this.swayOffset = Math.random() * 100;
-        this.swayBase = random(-0.18, 0.18);
-        this.rotateSpeed = random(-0.35, 0.35);
-        this.fallSpeed = CONFIG.fallSpeed * random(0.75, 2.2);
-        this.init();
-      }
+  requestAnimationFrame(tick);
+}
 
-      init() {
-        const imgIdx = pickImageIndex();
-        const size = random(CONFIG.minSize, CONFIG.maxSize);
-        const margin = size / 2 + 16;
+setTimeout(() => {
+  spawnSticker();
+  setInterval(spawnSticker, CONFIG.spawnInterval);
+}, CONFIG.initialDelay);
 
-        this.x = random(margin, window.innerWidth - margin);
-        this.y = random(-280, -80);
-        this.angle = random(-180, 180);
+requestAnimationFrame(tick);
 
-        const img = new Image();
-        img.src = CONFIG.images[imgIdx];
-        img.className = 'sticker';
-        img.style.width = `${size}px`;
+/* スクロールで貼る演出 */
+const pasteObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (!entry.isIntersecting) return;
 
-        img.style.transform = `
-          translate3d(${this.x}px, ${this.y}px, 0)
-          translate(-50%, -50%)
-          rotate(${this.angle}deg)
-        `;
+    const el = entry.target;
+    const rotate = (Math.random() * 4 - 2).toFixed(2) + "deg";
 
-        img.onload = () => {
-          container.appendChild(img);
-          this.el = img;
+    el.style.setProperty("--reveal-rotate", rotate);
+    el.classList.add("is-pasted");
 
-          requestAnimationFrame(() => {
-            if (this.el) this.el.classList.add('is-visible');
-          });
-        };
+    pasteObserver.unobserve(el);
+  });
+}, {
+  threshold: 0.22
+});
 
-        img.onerror = () => {
-          this.dead = true;
-        };
-      }
+document.querySelectorAll(".sticker-reveal").forEach((el) => {
+  pasteObserver.observe(el);
+});
 
-      update(time) {
-        if (!this.el || this.dead) return;
-
-        this.y += this.fallSpeed;
-
-        const sway =
-          Math.sin(time * 0.002 + this.swayOffset) *
-          CONFIG.swayRange;
-
-        this.x += sway * 0.5 + this.swayBase;
-        this.angle += this.rotateSpeed;
-
-        if (this.y > window.innerHeight + 80) {
-          this.opacity -= 0.035;
-          if (this.opacity <= 0) this.dead = true;
-        }
-
-        this.el.style.transform = `
-          translate3d(${this.x}px, ${this.y}px, 0)
-          translate(-50%, -50%)
-          rotate(${this.angle}deg)
-        `;
-
-        this.el.style.opacity = this.opacity;
-      }
-    }
-
-    function spawnSticker() {
-      if (stickers.length >= CONFIG.maxStickers) return;
-      stickers.push(new Sticker());
-    }
-
-    function tick(time) {
-      for (let i = stickers.length - 1; i >= 0; i--) {
-        const sticker = stickers[i];
-        sticker.update(time);
-
-        if (sticker.dead) {
-          if (sticker.el) sticker.el.remove();
-          stickers.splice(i, 1);
-        }
-      }
-
-      requestAnimationFrame(tick);
-    }
-
-    function startStickerLoop() {
-      setTimeout(() => {
-        spawnSticker();
-
-        setInterval(() => {
-          spawnSticker();
-        }, CONFIG.spawnInterval);
-      }, CONFIG.initialDelay);
-    }
-
-    const pasteObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-
-        const el = entry.target;
-        const rotate = (Math.random() * 4 - 2).toFixed(2) + "deg";
-
-        el.style.setProperty("--reveal-rotate", rotate);
-        el.classList.add("is-pasted");
-
-        pasteObserver.unobserve(el);
-      });
-    }, {
-      threshold: 0.22
-    });
-
-    document.querySelectorAll(".sticker-reveal").forEach((el) => {
-      pasteObserver.observe(el);
-    });
-
-    requestAnimationFrame(tick);
-    startStickerLoop();
-
+/* カウントダウン */
 const eventDate = new Date("2026-12-29T10:30:00+09:00");
 
 function updateCountdown() {
@@ -1701,7 +1698,6 @@ function updateCountdown() {
   }
 
   const totalSeconds = Math.floor(diff / 1000);
-
   const days = Math.floor(totalSeconds / 86400);
   const hours = Math.floor((totalSeconds % 86400) / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -1717,13 +1713,14 @@ function updateCountdown() {
 updateCountdown();
 setInterval(updateCountdown, 1000);
 
+/* パネルステッカー */
 const stickerPanelObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     if (!entry.isIntersecting) return;
 
-    const stickers = entry.target.querySelectorAll(".panel-sticker");
+    const panelStickers = entry.target.querySelectorAll(".panel-sticker");
 
-    stickers.forEach((sticker, index) => {
+    panelStickers.forEach((sticker, index) => {
       setTimeout(() => {
         sticker.classList.add("is-pasted");
       }, index * 180);
@@ -1739,15 +1736,14 @@ document.querySelectorAll(".sticker-panel").forEach((panel) => {
   stickerPanelObserver.observe(panel);
 });
 
+/* ホログラム */
 const holoSticker = document.querySelector(".holo-sticker");
 const tiltBtn = document.getElementById("tiltPermissionBtn");
 
 let targetGamma = 0;
 let targetBeta = 0;
-
 let currentGamma = 0;
 let currentBeta = 0;
-
 let holoStarted = false;
 
 function clamp(value, min, max) {
@@ -1789,36 +1785,29 @@ function startTiltEffect() {
   animateHolo();
 }
 
-/* iPhone用：ボタンで許可 */
 if (
   window.DeviceOrientationEvent &&
   typeof DeviceOrientationEvent.requestPermission === "function"
 ) {
   if (tiltBtn) {
-    const requestTiltPermission = async () => {
+    tiltBtn.addEventListener("click", async () => {
       try {
         const permission = await DeviceOrientationEvent.requestPermission();
 
         if (permission === "granted") {
           startTiltEffect();
-          tiltBtn.textContent = "TILT EFFECT ON ✓";
-          tiltBtn.classList.add("is-hidden");
         } else {
           tiltBtn.textContent = "許可されませんでした";
         }
       } catch (error) {
         tiltBtn.textContent = "もう一度タップ";
       }
-    };
-
-    tiltBtn.addEventListener("click", requestTiltPermission);
-    tiltBtn.addEventListener("touchend", requestTiltPermission);
+    });
   }
 } else {
   startTiltEffect();
 }
 
-/* 指でなぞっても滑らかに光る */
 if (holoSticker) {
   holoSticker.addEventListener("pointermove", (e) => {
     const rect = holoSticker.getBoundingClientRect();
@@ -1833,16 +1822,9 @@ if (holoSticker) {
     }
   });
 }
-  </script>
-<script src="password.js"></script>
-    <script>
-  setTimeout(() => {
-    const loader = document.getElementById("event-loading-screen");
-    if (loader) {
-      loader.classList.add("is-hidden");
-    }
-    document.body.classList.add("is-page-started");
-  }, 1800);
 </script>
+
+<script src="password.js"></script>
 </body>
 </html>
+
