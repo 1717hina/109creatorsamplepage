@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="./assets/password.css">
+  <title>C104 告知 - Scrapbook Style</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Courier+Prime:wght@700&family=Inter:wght@900&family=Noto+Sans+JP:wght@900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-color: #f2eee9;
+      --paper-bg: #efeae2;
+      --paper-bg-soft: #f4f1eb;
+      --accent: #d35400;
+      --text: #2c3e50;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+      background-color: var(--bg-color);
+      font-family:  'Inter', 'Noto Sans JP', sans-serif;
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    #event-loading-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f2eee9;
+      background-image: radial-gradient(#d1ccc0 1px, transparent 1px);
+      background-size: 30px 30px;
+      transition: opacity .45s ease, visibility .45s ease;
+    }
+
+    #event-loading-screen.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .event-loading-text {
+      font-family: "Hiragino Kaku Gothic ProN", sans-serif;
+      font-weight: 900;
+      font-size: 1rem;
+      letter-spacing: .08em;
+      margin: 0 0 28px;
+      color: #333;
+    }
+
+    .event-ticket-wrap {
+      position: relative;
+      width: min(78vw, 360px);
+    }
+
+    .event-ticket {
+      display: block;
+      width: 100%;
+      height: auto;
+      animation: floatTicket 1.8s ease-in-out infinite;
+      filter: drop-shadow(8px 10px 0 rgba(0,0,0,.16));
+    }
+
+    #event-loading-screen.is-stamped .event-ticket {
+      animation: none;
+    }
+
+    .event-stamp {
+      position: absolute;
+      width: 42%;
+      top: 50%;
+      left: 50%;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(2.2) rotate(-18deg);
+    }
+
+    #event-loading-screen.is-stamped .event-stamp {
+      animation: stampPop .38s cubic-bezier(.2,1.6,.4,1) forwards;
+    }
+
+    @keyframes floatTicket {
+      0%, 100% { transform: translateY(0) rotate(-3deg); }
+      50% { transform: translateY(-10px) rotate(-1deg); }
+    }
+
+    @keyframes stampPop {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(2.2) rotate(-18deg);
+      }
+      65% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(.9) rotate(-8deg);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) rotate(-8deg);
+      }
+    }
+
+    .bg-texture {
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(#d1ccc0 1px, transparent 1px);
+      background-size: 30px 30px;
+      z-index: 1;
+    }
+
+    #sticker-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .main-wrapper {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+    }
+
+    .first-view {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .hero-kv {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      opacity: 0;
+      transform: scale(.8);
+    }
+
+    .hero-kv img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .hero-logo {
+      position: absolute;
+      left: 50%;
+      bottom: 8vh;
+      width: min(88vw,650px);
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-50%) scale(2.2);
+    }
+
+    .hero-logo img {
+      width: 100%;
+      display: block;
+      filter:
+        drop-shadow(0 8px 0 #000)
+        drop-shadow(0 20px 30px rgba(0,0,0,.25));
+    }
+
+    body.is-page-started .hero-kv {
+      animation: kvAppear .5s ease-out forwards;
+    }
+
+    body.is-page-started .hero-logo {
+      animation: logoSlam .45s .3s cubic-bezier(.15,1.8,.25,1) forwards;
+    }
+
+    @keyframes kvAppear {
+      from {
+        opacity: 0;
+        transform: scale(.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes logoSlam {
+      0% {
+        opacity: 0;
+        transform: translateX(-50%) scale(2.4) rotate(-8deg);
+      }
+      70% {
+        opacity: 1;
+        transform: translateX(-50%) scale(.92) rotate(2deg);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1) rotate(0deg);
+      }
+    }
+
+    .scroll-hint {
+      position: absolute;
+      left: 50%;
+      bottom: 40px;
+      z-index: 20;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: #333;
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 0.8; }
+    }
+
+    .content-section {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0 20px 120px;
+      pointer-events: none;
+    }
+
+    .paper {
+      pointer-events: auto;
+    }
+
+    .paper-section {
+      position: relative;
+      padding: 52px 40px;
+      text-align: center;
+      background: linear-gradient(180deg, var(--paper-bg-soft), var(--paper-bg));
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.07);
+      border-radius: 8px;
+      margin-bottom: 28px;
+       overflow:visible;
+    }
+
+    .sticker-reveal {
+      opacity: 0;
+      transform:
+        translateY(80px)
+        rotate(var(--reveal-rotate, -2deg))
+        scale(0.92);
+      transform-origin: center top;
+      filter: drop-shadow(0 14px 18px rgba(0,0,0,.12));
+    }
+
+    .sticker-reveal.is-pasted {
+      animation: paperPaste .62s cubic-bezier(.16, 1.55, .34, 1) forwards;
+    }
+
+    .sticker-reveal.is-pasted::after {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      pointer-events: none;
+      border-radius: inherit;
+      animation: pasteFlash .45s ease-out forwards;
+    }
+
+    @keyframes paperPaste {
+      0% {
+        opacity: 0;
+        transform:
+          translateY(90px)
+          rotate(var(--reveal-rotate, -2deg))
+          scale(0.86);
+      }
+
+      58% {
+        opacity: 1;
+        transform:
+          translateY(-8px)
+          rotate(calc(var(--reveal-rotate, -2deg) * -0.45))
+          scale(1.035);
+      }
+
+      100% {
+        opacity: 1;
+        transform:
+          translateY(0)
+          rotate(0deg)
+          scale(1);
+      }
+    }
+
+    @keyframes pasteFlash {
+      0% {
+        box-shadow: inset 0 0 0 999px rgba(255,255,255,.28);
+      }
+      100% {
+        box-shadow: inset 0 0 0 999px rgba(255,255,255,0);
+      }
+    }
+
+    h2 {
+      font-size: 1.65rem;
+      margin: 0 0 24px;
+      border-bottom: 1px solid rgba(0,0,0,0.12);
+      padding-bottom: 18px;
+      letter-spacing: 0.04em;
+    }
+
+    .space-number {
+      font-size: 1.85rem;
+      color: var(--accent);
+      font-weight: bold;
+      margin: 24px 0;
+    }
+
+    .book-detail {
+      text-align: left;
+      margin: 30px 0 0;
+      line-height: 1.9;
+      font-size: 1.02rem;
+    }
+
+    .book-title {
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.12rem;
+      margin-bottom: 28px;
+    }
+
+    .btn-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 30px;
+    }
+
+    .btn {
+      display: block;
+      padding: 18px;
+      border: 1px solid #333;
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+      transition: all 0.3s;
+      background: rgba(255,255,255,0.18);
+    }
+
+    .btn:hover {
+      background: #333;
+      color: #fff;
+    }
+
+    .notes {
+      font-size: 0.9rem;
+      color: #555;
+      text-align: left;
+      line-height: 1.8;
+    }
+
+    .receipt-footer {
+      position: relative;
+      z-index: 10;
+      padding: 80px 24px 120px;
+      display: flex;
+      justify-content: center;
+      pointer-events: auto;
+    }
+
+    .receipt-paper {
+      position: relative;
+      width: min(100%, 560px);
+      background: #f4f1eb;
+      color: #111;
+      padding: 42px 34px 56px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.12);
+      font-family: "Arial Narrow", "Helvetica Neue", sans-serif;
+    }
+
+    .receipt-paper::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: -14px;
+      width: 100%;
+      height: 18px;
+      background:
+        radial-gradient(circle at 10px 14px, transparent 12px, #f4f1eb 13px)
+        repeat-x;
+      background-size: 24px 18px;
+    }
+
+    .receipt-meta,
+    .receipt-row,
+    .receipt-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .receipt-meta {
+      font-size: 13px;
+      letter-spacing: .04em;
+      margin-bottom: 34px;
+    }
+
+    .receipt-logo {
+      font-size: 34px;
+      font-weight: 900;
+      line-height: 1;
+      text-align: center;
+      letter-spacing: -0.06em;
+      color: #fff;
+      -webkit-text-stroke: 2px #000;
+      text-shadow: 5px 5px 0 #000;
+      transform: rotate(-2deg);
+    }
+
+    .receipt-sub {
+      text-align: center;
+      font-weight: 900;
+      margin: 12px 0 34px;
+      letter-spacing: .04em;
+    }
+
+    .receipt-row {
+      font-weight: 900;
+      font-size: 18px;
+    }
+
+    .receipt-line {
+      border-top: 3px dashed #111;
+      margin: 12px 0 20px;
+    }
+
+    .receipt-item {
+      text-decoration: none;
+      color: #111;
+      font-size: 30px;
+      font-weight: 900;
+      margin: 10px 0;
+    }
+
+    .receipt-item b {
+      font-size: 18px;
+      border: 2px solid #111;
+      border-radius: 999px;
+      padding: 4px 22px;
+    }
+
+    .receipt-social {
+      display: flex;
+      justify-content: center;
+      gap: 34px;
+      font-size: 46px;
+      font-weight: 900;
+      margin: 28px 0;
+    }
+
+    .barcode {
+      width: 80%;
+      height: 88px;
+      margin: 0 auto;
+      background: repeating-linear-gradient(
+        90deg,
+        #111 0 3px,
+        transparent 3px 7px,
+        #111 7px 10px,
+        transparent 10px 16px
+      );
+    }
+
+    .sticker {
+      position: absolute;
+      left: 0;
+      top: 0;
+      will-change: transform, opacity;
+      transform-origin: center center;
+      user-select: none;
+      -webkit-user-drag: none;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      filter:
+        brightness(1.02)
+        contrast(1.03)
+        drop-shadow(1px 2px 1px rgba(0,0,0,0.20))
+        drop-shadow(4px 6px 8px rgba(0,0,0,0.14));
+    }
+
+    .sticker.is-visible {
+      opacity: 1;
+    }
+.paper-section{
+  position:relative;
+}
+
+
+
+.circle-cut-card {
+  position: relative;
+  width: calc(50% - 6px);
+  aspect-ratio: 1 / 1;
+
+  padding: 6px;
+  background: #fff;
+  border-radius: 16px;
+
+  box-shadow:
+    0 10px 20px rgba(0,0,0,.16),
+    0 0 0 1px rgba(0,0,0,.06);
+
+  opacity: 0;
+  transform: scale(.7) rotate(var(--cut-rotate));
+}
+
+.circle-cut-card img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.cut-left {
+  --cut-rotate: -4deg;
+ margin-right: -10px;
+}
+
+.cut-right {
+  --cut-rotate: 4deg;
+  margin-left: 8px;
+margin-top: 12px;
+}
+
+.paper-section.is-pasted .circle-cut-card {
+  animation: circleCutPaste .48s cubic-bezier(.15,1.7,.3,1) forwards;
+}
+
+.paper-section.is-pasted .circle-cut-card:nth-child(2) {
+  animation-delay: .16s;
+}
+
+.circle-cut-card::before {
+  content: "";
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  width: 58px;
+  height: 22px;
+
+  transform: translateX(-50%) rotate(-4deg);
+
+  background: rgba(255, 246, 160, .8);
+  border-radius: 4px;
+
+  box-shadow: 0 3px 8px rgba(0,0,0,.1);
+  z-index: 2;
+}
+
+.circle-cut-card:nth-child(2)::before {
+  transform: translateX(-50%) rotate(5deg);
+}
+
+@keyframes circleCutPaste {
+  0% {
+    opacity: 0;
+    transform: scale(.7) rotate(calc(var(--cut-rotate) * 2));
+  }
+
+  70% {
+    opacity: 1;
+    transform: scale(1.08) rotate(var(--cut-rotate));
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(var(--cut-rotate));
+  }
+}
+h2,
+.space-number,
+.btn,
+.receipt-logo,
+.receipt-sub,
+.receipt-row,
+.receipt-item,
+.event-loading-text,
+.scroll-hint {
+  font-family: 'Archivo Black', 'Noto Sans JP', sans-serif;
+}
+
+.receipt-meta,
+.barcode,
+.event-loading-text {
+  font-family: 'Courier Prime', monospace;
+}
+.book-detail,
+.notes,
+p {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 900;
+}
+
+.goods-panel {
+  width: 92%;
+  max-width: 760px;
+  margin: 40px auto;
+  padding: 28px 22px 34px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #d9d2ff 0%, #b8dcff 100%);
+  box-shadow: 0 12px 28px rgba(0,0,0,.16);
+}
+
+.goods-tabs {
+  width: 68%;
+  margin: 0 auto 28px;
+  padding: 4px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #333;
+  border-radius: 999px;
+}
+
+.goods-tabs button {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 0;
+  background: transparent;
+  color: #fff;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 900;
+  font-size: .9rem;
+}
+
+.goods-tabs button.is-active {
+  background: #fff;
+  color: #333;
+}
+
+.goods-panel-title {
+  width: 90%;
+  margin: 0 auto 26px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.86);
+  text-align: center;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 1rem;
+  font-weight: 900;
+  color: #4c4f7a;
+}
+
+.goods-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px 18px;
+}
+
+.goods-item {
+  position: relative;
+  background: #fff;
+  border-radius: 18px 18px 18px 6px;
+  padding: 12px 12px 46px;
+  box-shadow: 0 8px 18px rgba(0,0,0,.12);
+  overflow: hidden;
+}
+
+.goods-img-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.goods-img-wrap img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.goods-name {
+  border-top: 2px solid #b8aee8;
+  padding-top: 8px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: .78rem;
+  font-weight: 900;
+  line-height: 1.35;
+  color: #333;
+}
+
+.goods-price {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  min-width: 96px;
+  height: 42px;
+  padding: 2px 10px 0 18px;
+  background: #fff;
+  border-radius: 18px 0 0 0;
+  text-align: right;
+  color: #9b82dc;
+}
+
+.goods-price strong {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: -0.05em;
+}
+
+.goods-price span {
+  margin-left: 3px;
+  font-size: .68rem;
+  font-weight: 900;
+  color: #333;
+}
+
+@media (max-width: 430px) {
+  .goods-panel {
+    padding: 24px 16px 30px;
+  }
+
+  .goods-grid {
+    gap: 20px 14px;
+  }
+
+  .goods-item {
+    padding: 10px 10px 42px;
+  }
+
+  .goods-name {
+    font-size: .68rem;
+  }
+
+  .goods-price strong {
+    font-size: 1.25rem;
+  }
+}
+
+.countdown-box {
+  width: min(76vw, 520px);
+  margin: 28px auto 0;
+  padding: 12px 22px;
+  border-radius: 999px;
+  background: #333;
+  color: #fff;
+  z-index:20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  font-family: 'Courier Prime', monospace;
+  font-size: clamp(1.2rem, 5vw, 2rem);
+  letter-spacing: .08em;
+  box-shadow: 0 8px 18px rgba(0,0,0,.18);
+}
+
+.countdown-icon {
+  font-size: 1.25em;
+}
+
+.countdown-area{
+  position:relative;
+  width:min(92%,560px);
+  margin:90px auto 40px;
+}
+
+.countdown-chibi{
+  position:absolute;
+
+  width:140px;
+
+  left:50%;
+  bottom:45px;
+
+  transform:
+    translateX(-50%)
+    rotate(-4deg);
+
+  z-index:18;
+
+  filter:
+    drop-shadow(0 4px 0 #000)
+    drop-shadow(0 10px 16px rgba(0,0,0,.15));
+}
+
+.countdown-inner{
+  height:68px;
+
+  border-radius:999px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #2d2d2d,
+      #474747
+    );
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+
+  color:white;
+
+  position:relative;
+}
+
+.panel-sticker {
+  position: absolute;
+  z-index: 30;
+  opacity: 0;
+  transform: scale(.2) rotate(-18deg);
+  filter:
+    drop-shadow(0 4px 0 #fff)
+    drop-shadow(0 8px 12px rgba(0,0,0,.22));
+  pointer-events: none;
+}
+
+.panel-sticker.is-pasted {
+  animation: stickerPaste .45s cubic-bezier(.15,1.8,.25,1) forwards;
+}
+
+@keyframes stickerPaste {
+  0% {
+    opacity: 0;
+    transform: scale(.2) rotate(-18deg);
+  }
+
+  70% {
+    opacity: 1;
+    transform: scale(1.16) rotate(6deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.goods-panel {
+  position: relative;
+  overflow: visible;
+}
+
+.sticker-left {
+  width: 120px;
+  left: -16px;
+  top: -34px;
+}
+
+.sticker-right {
+  width: 96px;
+  right: 26px;
+  top: 40px;
+  transform: scale(.2) rotate(18deg);
+}
+
+.event-info-card {
+  padding: 48px 18px 46px;
+}
+
+.event-name {
+  margin: 20px 0 10px;
+  font-family: 'Archivo Black', 'Noto Sans JP', sans-serif;
+  font-size: 1.45rem;
+  letter-spacing: .04em;
+}
+
+.event-date {
+  margin: 0 0 18px;
+  font-size: 1.05rem;
+}
+
+.event-info-card .space-number {
+  font-size: clamp(2.4rem, 11vw, 4.2rem);
+  line-height: 1;
+  margin: 18px 0 30px;
+}
+
+.circle-cut-area {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.circle-cut-card {
+  position: relative;
+
+  width: calc(50% - 4px);
+  aspect-ratio: 1 / 1;
+
+  background: transparent;
+  padding: 0;
+
+  border-radius: 0;
+
+  filter:
+    drop-shadow(0 10px 14px rgba(0,0,0,.15));
+
+  opacity: 0;
+  transform: scale(.72) rotate(var(--cut-rotate));
+}
+
+.circle-cut-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.cut-left {
+  --cut-rotate: -4deg;
+}
+
+.cut-right {
+  --cut-rotate: 4deg;
+  margin-top: 8px;
+}
+
+.circle-cut-card::before {
+  content: "";
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  width: 72px;
+  height: 25px;
+  transform: translateX(-50%) rotate(-5deg);
+  background: rgba(255, 246, 150, .82);
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0,0,0,.1);
+  z-index: 3;
+}
+
+.circle-cut-card:nth-child(2)::before {
+  transform: translateX(-50%) rotate(5deg);
+}
+
+.paper-section.is-pasted .circle-cut-card {
+  animation: circleCutPaste .48s cubic-bezier(.15,1.7,.3,1) forwards;
+}
+
+.paper-section.is-pasted .circle-cut-card:nth-child(2) {
+  animation-delay: .14s;
+}
+
+@keyframes circleCutPaste {
+  0% {
+    opacity: 0;
+    transform: scale(.72) rotate(calc(var(--cut-rotate) * 2));
+  }
+
+  70% {
+    opacity: 1;
+    transform: scale(1.08) rotate(var(--cut-rotate));
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(var(--cut-rotate));
+  }
+}
+
+/* サークルカット：変な四角枠を完全に消す */
+.circle-cut-area {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 4px;
+  width: 100%;
+  margin-top: 22px;
+}
+
+.circle-cut-card {
+  position: relative;
+  width: 52%;
+
+  aspect-ratio: auto;
+  padding: 0;
+  margin: 0;
+
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+
+  opacity: 0;
+  transform: scale(.72) rotate(var(--cut-rotate));
+}
+
+.circle-cut-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+
+  object-fit: contain;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+
+  filter: drop-shadow(0 12px 14px rgba(0,0,0,.18));
+}
+
+.cut-left {
+  --cut-rotate: -5deg;
+  margin-right: -10px;
+}
+
+.cut-right {
+  --cut-rotate: 5deg;
+  margin-left: -10px;
+}
+
+.circle-cut-card::before {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  width: 78px;
+  height: 25px;
+  transform: translateX(-50%) rotate(-5deg);
+  background: rgba(255, 246, 150, .82);
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0,0,0,.1);
+  z-index: 3;
+}
+
+.circle-cut-card:nth-child(2)::before {
+  transform: translateX(-50%) rotate(5deg);
+}
+
+.secret-sticker-panel {
+  position: relative;
+  margin: 44px auto 28px;
+  padding: 42px 24px 34px;
+  text-align: center;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(255,255,255,.95), transparent 24%),
+    linear-gradient(180deg, #fff7cf 0%, #ffd9e8 48%, #cdeaff 100%);
+  box-shadow:
+    0 14px 28px rgba(0,0,0,.16),
+    inset 0 0 0 3px rgba(255,255,255,.55);
+  overflow: visible;
+}
+
+.secret-sticker-panel::before,
+.secret-sticker-panel::after {
+  content: "";
+  position: absolute;
+  width: 86px;
+  height: 26px;
+  background: rgba(255,246,150,.82);
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0,0,0,.1);
+}
+
+.secret-sticker-panel::before {
+  left: 24px;
+  top: -12px;
+  transform: rotate(-7deg);
+}
+
+.secret-sticker-panel::after {
+  right: 24px;
+  bottom: -10px;
+  transform: rotate(6deg);
+}
+
+.secret-label {
+  display: inline-block;
+  margin-bottom: 18px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #333;
+  color: #fff;
+  font-family: 'Courier Prime', monospace;
+  font-size: .78rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.secret-sticker-panel h2 {
+  margin-bottom: 20px;
+  border-bottom: 0;
+  padding-bottom: 0;
+  font-size: 1.5rem;
+  color: #2c3e50;
+}
+
+.secret-main {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: #2c3e50;
+}
+
+.secret-ticket {
+  width: min(88%, 360px);
+  margin: 28px auto 18px;
+  padding: 18px 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.82);
+  border: 2px dashed rgba(44,62,80,.35);
+  box-shadow: 0 8px 18px rgba(0,0,0,.1);
+}
+
+.secret-ticket span {
+  display: block;
+  margin-bottom: 6px;
+  font-family: 'Courier Prime', monospace;
+  font-size: .76rem;
+  letter-spacing: .14em;
+  color: #777;
+}
+
+.secret-ticket strong {
+  display: block;
+  font-family: 'Archivo Black', 'Noto Sans JP', sans-serif;
+  font-size: 2.4rem;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.secret-note {
+  font-size: .78rem;
+  line-height: 1.7;
+  color: #555;
+}
+
+.holo-sticker-wrap {
+  width: min(78vw, 280px);
+  margin: 26px auto 22px;
+  perspective: 900px;
+}
+
+.holo-sticker {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+
+  transform:
+    rotateX(var(--tilt-y, 0deg))
+    rotateY(var(--tilt-x, 0deg));
+
+  transition: none;
+  will-change: transform;
+
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,.2));
+}
+
+.holo-sticker img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+/* 画像の形だけ光るホロ */
+.holo-sticker::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      rgba(255,255,255,.9) calc(var(--holo-x, 50%) - 10%),
+      rgba(255,120,220,.55) calc(var(--holo-x, 50%) - 3%),
+      rgba(120,220,255,.55) var(--holo-x, 50%),
+      rgba(255,255,160,.45) calc(var(--holo-x, 50%) + 6%),
+      transparent calc(var(--holo-x, 50%) + 15%)
+    );
+
+  mix-blend-mode: screen;
+  opacity: .95;
+
+  -webkit-mask-image: var(--sticker-img);
+  mask-image: var(--sticker-img);
+
+  -webkit-mask-size: contain;
+  mask-size: contain;
+
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+/* キラキラも画像の形だけ */
+.holo-sticker::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 70% 22%, rgba(255,255,255,.7) 0 1.5px, transparent 3px),
+    radial-gradient(circle at 58% 72%, rgba(255,255,255,.8) 0 2px, transparent 3px),
+    radial-gradient(circle at 35% 80%, rgba(255,255,255,.6) 0 1.5px, transparent 3px);
+
+  opacity: .75;
+
+  -webkit-mask-image: var(--sticker-img);
+  mask-image: var(--sticker-img);
+
+  -webkit-mask-size: contain;
+  mask-size: contain;
+
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+.tilt-permission-btn {
+  margin: 10px auto 0;
+  display: block;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: #333;
+  color: #fff;
+  font-family: 'Courier Prime', monospace;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.tilt-permission-btn.is-hidden {
+  display: none;
+}
+
+.secret-sticker-panel {
+  position: relative;
+  z-index: 50;
+  pointer-events: auto;
+}
+
+.secret-sticker-panel * {
+  pointer-events: auto;
+}
+
+.secret-sticker-panel::before,
+.secret-sticker-panel::after,
+.holo-sticker::before,
+.holo-sticker::after {
+  pointer-events: none;
+}
+
+.tilt-permission-btn {
+  position: relative;
+  z-index: 999;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+  </style>
+</head>
+
+<body>
+
+
+  <div id="event-loading-screen">
+    <p class="event-loading-text">会場に向かっています...</p>
+
+    <div class="event-ticket-wrap">
+      <img src="loading/event-ticket.png" class="event-ticket" alt="">
+      <img src="loading/entry-stamp.png" class="event-stamp" alt="">
+    </div>
+  </div>
+
+  <div class="bg-texture"></div>
+  <div id="sticker-layer"></div>
+
+  <div class="main-wrapper">
+    <section class="first-view">
+      <div class="hero-kv">
+        <img src="main-visual.png" alt="">
+      </div>
+
+      <div class="hero-logo">
+        <img src="logo.png" alt="">
+      </div>
+
+      <div class="scroll-hint">SCROLL</div>
+    </section>
+
+<div class="countdown-area">
+
+  <img
+    src="blade-chibi.png"
+    class="countdown-chibi"
+    alt=""
+  >
+
+  <div class="countdown-inner">
+    <span class="countdown-hourglass">⌛</span>
+    <span id="countdown">00 : 00 : 00 : 00</span>
+  </div>
+</div>
+
+    <div class="content-section">
+      <div class="paper">
+       <section class="paper-section sticker-reveal event-info-card">
+  <h2>EVENT INFO</h2>
+
+  <p class="event-name">COMIC MARKET 109</p>
+  <p class="event-date">2026.08.16 (Sun)</p>
+
+  <div class="space-number">西1ホール<br>A-01a</div>
+
+  <div class="circle-cut-area">
+    <div class="circle-cut-card cut-left">
+      <img src="circle-cut1.png" alt="サークルカット1">
+    </div>
+
+    <div class="circle-cut-card cut-right">
+      <img src="circle-cut2.png" alt="サークルカット2">
+    </div>
+  </div>
+</section>
+
+
+
+<section class="goods-panel sticker-panel">
+  <img src="chibi/chibi01.png" class="panel-sticker sticker-left" alt="">
+  <img src="chibi/chibi02.png" class="panel-sticker sticker-right" alt=""></section>
+ <section class="goods-panel">
+  <h2 class="goods-panel-title">崩壊:スターレイル</h2>
+
+  <div class="goods-grid">
+    <article class="goods-item">
+      <div class="goods-img-wrap">
+        <img src="goods/goods01.png" alt="">
+      </div>
+
+      <div class="goods-name">夢見月瑞希プレイマット</div>
+
+      <div class="goods-price">
+        <strong>1,500</strong><span>円</span>
+      </div>
+    </article>
+
+    <article class="goods-item">
+      <div class="goods-img-wrap">
+        <img src="goods/goods02.png" alt="">
+      </div>
+
+      <div class="goods-name">愉悦なポチ袋</div>
+
+      <div class="goods-price">
+        <strong>500</strong><span>円</span>
+      </div>
+    </article>
+
+   <article class="goods-item">
+      <div class="goods-img-wrap">
+        <img src="goods/goods02.png" alt="">
+      </div>
+
+      <div class="goods-name">愉悦なポチ袋</div>
+
+      <div class="goods-price">
+        <strong>500</strong><span>円</span>
+      </div>
+    </article>
+
+   <article class="goods-item">
+      <div class="goods-img-wrap">
+        <img src="goods/goods02.png" alt="">
+      </div>
+
+      <div class="goods-name">愉悦なポチ袋</div>
+
+      <div class="goods-price">
+        <strong>500</strong><span>円</span>
+      </div>
+    </article>
+  </div>
+</section>
+
+
+   <section class="goods-panel">
+
+  <h2 class="goods-panel-title">原神</h2>
+
+  <div class="goods-grid">
+    <article class="goods-item">
+      <div class="goods-img-wrap">
+        <img src="goods/goods01.png" alt="">
+      </div>
+
+      <div class="goods-name">夢見月瑞希プレイマット</div>
+
+      <div class="goods-price">
+        <strong>1,500</strong><span>円</span>
+      </div>
+    </article>
+
+    <article class="goods-item">
+      <div class="goods-img-wrap">
+        <img src="goods/goods02.png" alt="">
+      </div>
+
+      <div class="goods-name">愉悦なポチ袋</div>
+
+      <div class="goods-price">
+        <strong>500</strong><span>円</span>
+      </div>
+    </article>
+  </div>
+</section>
+
+        <section class="paper-section sticker-reveal">
+          <h2>NOTES</h2>
+          <div class="notes">
+            <p>・当日は混雑緩和のため、千円札での支払いにご協力をお願いいたします。</p>
+            <p>・差し入れは個包装の市販品のみお受け取り可能です。</p>
+            <p>・ステッカーはご自由にお持ち帰りください（無配）。</p>
+          </div>
+        </section>
+      </div>
+    </div>
+
+<section class="secret-sticker-panel sticker-reveal">
+  <div class="secret-label">SECRET BONUS</div>
+
+  <h2>会場限定ステッカー</h2>
+
+  <div class="holo-sticker-wrap">
+    <div class="holo-sticker" style="--sticker-img: url('secret-sticker.png');">
+      <img src="secret-sticker.png" alt="会場限定ステッカー">
+    </div>
+  </div>
+
+  <button class="tilt-permission-btn" id="tiltPermissionBtn">
+    TILT EFFECT ON
+  </button>
+
+  <p class="secret-main">
+    この画面をスペースで提示すると<br>
+    限定ステッカーを1枚プレゼント！
+  </p>
+
+  <div class="secret-ticket">
+    <span>SCREENSHOT OK</span>
+    <strong>西1 A-01ab</strong>
+  </div>
+
+  <p class="secret-note">
+    ※おひとり様1枚まで / なくなり次第終了
+  </p>
+</section>
+    <footer class="receipt-footer">
+      <div class="receipt-paper">
+        <div class="receipt-meta">
+          <span>NO.00000109</span>
+          <span>DATE 26.08.16</span>
+        </div>
+
+        <div class="receipt-logo">COMICMARKET109</div>
+        <div class="receipt-sub">OFFICIAL NOTICE</div>
+
+        <div class="receipt-row">
+          <span>MENU</span>
+          <span>LINK</span>
+        </div>
+
+        <div class="receipt-line"></div>
+
+        <a href="#" class="receipt-item"><span>TOP</span><b>VIEW</b></a>
+        <a href="#" class="receipt-item"><span>WORKS</span><b>VIEW</b></a>
+        <a href="#" class="receipt-item"><span>ILLUST</span><b>VIEW</b></a>
+        <a href="goods/index.html" class="receipt-item"><span>GOODS</span><b>VIEW</b></a>
+        <a href="#" class="receipt-item"><span>CONTACT</span><b>MAIL</b></a>
+
+        <div class="receipt-line"></div>
+
+        <div class="receipt-social">
+          <span>𝕏</span>
+          <span>◎</span>
+          <span>✦</span>
+        </div>
+
+        <div class="barcode"></div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const EVENT_LOADING_MIN_TIME = 700;
+    const STAMP_VIEW_TIME = 900;
+    const eventLoadingStart = Date.now();
+
+    window.addEventListener("load", () => {
+      const loader = document.getElementById("event-loading-screen");
+      if (!loader) return;
+
+      const elapsed = Date.now() - eventLoadingStart;
+      const wait = Math.max(0, EVENT_LOADING_MIN_TIME - elapsed);
+
+      setTimeout(() => {
+        loader.classList.add("is-stamped");
+
+        setTimeout(() => {
+          loader.classList.add("is-hidden");
+          document.body.classList.add("is-page-started");
+        }, STAMP_VIEW_TIME);
+      }, wait);
+    });
+
+    const CONFIG = {
+      images: ['image1.png', 'image2.png', 'image3.png', 'image4.png'],
+      initialDelay: 500,
+      spawnInterval: 2600,
+      fallSpeed: 0.9,
+      maxStickers: 5,
+      swayRange: 0.55,
+      minSize: 130,
+      maxSize: 200
+    };
+
+    const container = document.getElementById('sticker-layer');
+    let stickers = [];
+    let lastImgIndex = -1;
+
+    function random(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function pickImageIndex() {
+      if (CONFIG.images.length <= 1) return 0;
+
+      let imgIdx;
+      do {
+        imgIdx = Math.floor(Math.random() * CONFIG.images.length);
+      } while (imgIdx === lastImgIndex);
+
+      lastImgIndex = imgIdx;
+      return imgIdx;
+    }
+
+    class Sticker {
+      constructor() {
+        this.el = null;
+        this.dead = false;
+        this.x = 0;
+        this.y = 0;
+        this.angle = 0;
+        this.opacity = 1;
+        this.swayOffset = Math.random() * 100;
+        this.swayBase = random(-0.18, 0.18);
+        this.rotateSpeed = random(-0.35, 0.35);
+        this.fallSpeed = CONFIG.fallSpeed * random(0.75, 2.2);
+        this.init();
+      }
+
+      init() {
+        const imgIdx = pickImageIndex();
+        const size = random(CONFIG.minSize, CONFIG.maxSize);
+        const margin = size / 2 + 16;
+
+        this.x = random(margin, window.innerWidth - margin);
+        this.y = random(-280, -80);
+        this.angle = random(-180, 180);
+
+        const img = new Image();
+        img.src = CONFIG.images[imgIdx];
+        img.className = 'sticker';
+        img.style.width = `${size}px`;
+
+        img.style.transform = `
+          translate3d(${this.x}px, ${this.y}px, 0)
+          translate(-50%, -50%)
+          rotate(${this.angle}deg)
+        `;
+
+        img.onload = () => {
+          container.appendChild(img);
+          this.el = img;
+
+          requestAnimationFrame(() => {
+            if (this.el) this.el.classList.add('is-visible');
+          });
+        };
+
+        img.onerror = () => {
+          this.dead = true;
+        };
+      }
+
+      update(time) {
+        if (!this.el || this.dead) return;
+
+        this.y += this.fallSpeed;
+
+        const sway =
+          Math.sin(time * 0.002 + this.swayOffset) *
+          CONFIG.swayRange;
+
+        this.x += sway * 0.5 + this.swayBase;
+        this.angle += this.rotateSpeed;
+
+        if (this.y > window.innerHeight + 80) {
+          this.opacity -= 0.035;
+          if (this.opacity <= 0) this.dead = true;
+        }
+
+        this.el.style.transform = `
+          translate3d(${this.x}px, ${this.y}px, 0)
+          translate(-50%, -50%)
+          rotate(${this.angle}deg)
+        `;
+
+        this.el.style.opacity = this.opacity;
+      }
+    }
+
+    function spawnSticker() {
+      if (stickers.length >= CONFIG.maxStickers) return;
+      stickers.push(new Sticker());
+    }
+
+    function tick(time) {
+      for (let i = stickers.length - 1; i >= 0; i--) {
+        const sticker = stickers[i];
+        sticker.update(time);
+
+        if (sticker.dead) {
+          if (sticker.el) sticker.el.remove();
+          stickers.splice(i, 1);
+        }
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    function startStickerLoop() {
+      setTimeout(() => {
+        spawnSticker();
+
+        setInterval(() => {
+          spawnSticker();
+        }, CONFIG.spawnInterval);
+      }, CONFIG.initialDelay);
+    }
+
+    const pasteObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+
+        const el = entry.target;
+        const rotate = (Math.random() * 4 - 2).toFixed(2) + "deg";
+
+        el.style.setProperty("--reveal-rotate", rotate);
+        el.classList.add("is-pasted");
+
+        pasteObserver.unobserve(el);
+      });
+    }, {
+      threshold: 0.22
+    });
+
+    document.querySelectorAll(".sticker-reveal").forEach((el) => {
+      pasteObserver.observe(el);
+    });
+
+    requestAnimationFrame(tick);
+    startStickerLoop();
+
+const eventDate = new Date("2026-12-29T10:30:00+09:00");
+
+function updateCountdown() {
+  const timer = document.getElementById("countdown");
+  if (!timer) return;
+
+  const now = new Date();
+  const diff = eventDate - now;
+
+  if (diff <= 0) {
+    timer.textContent = "00 : 00 : 00 : 00";
+    return;
+  }
+
+  const totalSeconds = Math.floor(diff / 1000);
+
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  timer.textContent =
+    `${String(days).padStart(2, "0")} : ` +
+    `${String(hours).padStart(2, "0")} : ` +
+    `${String(minutes).padStart(2, "0")} : ` +
+    `${String(seconds).padStart(2, "0")}`;
+}
+
+updateCountdown();
+setInterval(updateCountdown, 1000);
+
+const stickerPanelObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (!entry.isIntersecting) return;
+
+    const stickers = entry.target.querySelectorAll(".panel-sticker");
+
+    stickers.forEach((sticker, index) => {
+      setTimeout(() => {
+        sticker.classList.add("is-pasted");
+      }, index * 180);
+    });
+
+    stickerPanelObserver.unobserve(entry.target);
+  });
+}, {
+  threshold: 0.35
+});
+
+document.querySelectorAll(".sticker-panel").forEach((panel) => {
+  stickerPanelObserver.observe(panel);
+});
+
+const holoSticker = document.querySelector(".holo-sticker");
+const tiltBtn = document.getElementById("tiltPermissionBtn");
+
+let targetGamma = 0;
+let targetBeta = 0;
+
+let currentGamma = 0;
+let currentBeta = 0;
+
+let holoStarted = false;
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function setTargetTilt(gamma = 0, beta = 0) {
+  targetGamma = clamp(gamma, -35, 35);
+  targetBeta = clamp(beta, -35, 35);
+}
+
+function animateHolo() {
+  if (!holoSticker) return;
+
+  currentGamma += (targetGamma - currentGamma) * 0.08;
+  currentBeta += (targetBeta - currentBeta) * 0.08;
+
+  const tiltX = clamp(currentGamma / 5, -7, 7);
+  const tiltY = clamp(currentBeta / 8, -6, 6);
+  const holoX = clamp(50 + currentGamma * 1.4, 8, 92);
+
+  holoSticker.style.setProperty("--tilt-x", `${tiltX}deg`);
+  holoSticker.style.setProperty("--tilt-y", `${-tiltY}deg`);
+  holoSticker.style.setProperty("--holo-x", `${holoX}%`);
+
+  requestAnimationFrame(animateHolo);
+}
+
+function startTiltEffect() {
+  if (holoStarted) return;
+  holoStarted = true;
+
+  window.addEventListener("deviceorientation", (e) => {
+    setTargetTilt(e.gamma || 0, e.beta || 0);
+  });
+
+  if (tiltBtn) tiltBtn.classList.add("is-hidden");
+
+  animateHolo();
+}
+
+/* iPhone用：ボタンで許可 */
+if (
+  window.DeviceOrientationEvent &&
+  typeof DeviceOrientationEvent.requestPermission === "function"
+) {
+  if (tiltBtn) {
+    const requestTiltPermission = async () => {
+      try {
+        const permission = await DeviceOrientationEvent.requestPermission();
+
+        if (permission === "granted") {
+          startTiltEffect();
+          tiltBtn.textContent = "TILT EFFECT ON ✓";
+          tiltBtn.classList.add("is-hidden");
+        } else {
+          tiltBtn.textContent = "許可されませんでした";
+        }
+      } catch (error) {
+        tiltBtn.textContent = "もう一度タップ";
+      }
+    };
+
+    tiltBtn.addEventListener("click", requestTiltPermission);
+    tiltBtn.addEventListener("touchend", requestTiltPermission);
+  }
+} else {
+  startTiltEffect();
+}
+
+/* 指でなぞっても滑らかに光る */
+if (holoSticker) {
+  holoSticker.addEventListener("pointermove", (e) => {
+    const rect = holoSticker.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const gamma = (x - 0.5) * 60;
+
+    setTargetTilt(gamma, 0);
+
+    if (!holoStarted) {
+      holoStarted = true;
+      animateHolo();
+    }
+  });
+}
+  </script>
+<script src="/assets/password.js"></script>
+</body>
+</html>
