@@ -1266,7 +1266,11 @@ p {
   pointer-events: auto;
   touch-action: manipulation;
 }
-
+#event-loading-screen.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
   </style>
 </head>
 
@@ -1832,5 +1836,14 @@ if (holoSticker) {
 }
   </script>
 <script src="password.js"></script>
+    <script>
+  setTimeout(() => {
+    const loader = document.getElementById("event-loading-screen");
+    if (loader) {
+      loader.classList.add("is-hidden");
+    }
+    document.body.classList.add("is-page-started");
+  }, 1800);
+</script>
 </body>
 </html>
