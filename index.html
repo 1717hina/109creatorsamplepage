@@ -1501,6 +1501,11 @@ p {
   </div>
 
   <script>
+    <script>
+if(localStorage.getItem("siteAuth")!=="ok"){
+ location.href="password.js";
+}
+</script>
     const EVENT_LOADING_MIN_TIME = 700;
     const STAMP_VIEW_TIME = 900;
     const eventLoadingStart = Date.now();
